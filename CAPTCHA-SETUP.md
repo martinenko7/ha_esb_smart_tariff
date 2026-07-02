@@ -1,5 +1,7 @@
 # ESB Smart Meter - Manual Cookie Setup
 
+**Maintained by:** [martinenko7](https://github.com/martinenko7)
+
 This guide explains how to manually provide session cookies when ESB Networks requires CAPTCHA verification.
 
 ## When Do I Need This?

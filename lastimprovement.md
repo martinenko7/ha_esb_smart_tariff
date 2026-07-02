@@ -1,5 +1,6 @@
 # ESB Smart Meter Integration - Improvement Recommendations
 
+**Maintained by:** [martinenko7](https://github.com/martinenko7)  
 **Date:** November 8, 2025  
 **Focus:** Security, Performance, Reliability, and Stealth
 

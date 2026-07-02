@@ -1,5 +1,7 @@
 # ESB Smart Meter Authentication Test Script
 
+**Maintained by:** [martinenko7](https://github.com/martinenko7)
+
 This standalone script helps test and debug authentication with the ESB Smart Meter integration using the actual production code.
 
 ## Purpose

@@ -1,5 +1,6 @@
 # reCAPTCHA Handling Options for ESB Smart Meter Integration
 
+**Maintained by:** [martinenko7](https://github.com/martinenko7)  
 **Date:** November 10, 2025  
 **Status:** Research & Analysis  
 **Purpose:** Evaluate options for handling reCAPTCHA challenges from ESB Networks

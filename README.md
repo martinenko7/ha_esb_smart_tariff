@@ -1,11 +1,12 @@
 # ESB Smart Meter Integration for Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
-[![GitHub Release](https://img.shields.io/github/release/antoine-voiry/home-assistant-esb-smart-meter-integration.svg)](https://github.com/antoine-voiry/home-assistant-esb-smart-meter-integration/releases)
-[![License](https://img.shields.io/github/license/antoine-voiry/home-assistant-esb-smart-meter-integration.svg)](LICENSE)
+[![GitHub Release](https://img.shields.io/github/release/martinenko7/ha_esb_smart_tariff.svg)](https://github.com/martinenko7/ha_esb_smart_tariff/releases)
+[![License](https://img.shields.io/github/license/martinenko7/ha_esb_smart_tariff.svg)](LICENSE)
 
 A comprehensive Home Assistant integration for monitoring your electricity usage from ESB Networks Smart Meters in Ireland. Track your consumption across multiple time periods with automatic data retrieval and smart caching.
 
+> **Maintained by:** [martinenko7](https://github.com/martinenko7)
 > **Credits:** Heavily inspired by [badger707's ESB automation](https://github.com/badger707/esb-smart-meter-reading-automation) and originally forked from [RobinJ1995's integration](https://github.com/RobinJ1995/home-assistant-esb-smart-meter-integration).
 
 ---
@@ -30,7 +31,7 @@ A comprehensive Home Assistant integration for monitoring your electricity usage
 
 ## ✨ Features
 
-- **📊 Six Time-Period Sensors**: Track usage for today, last 24 hours, this week, last 7 days, this month, and last 30 days
+- **📊 18 Time-of-Use Tariff Sensors**: Track Day, Night, and Peak usage across six reporting periods
 - **🔄 Smart Caching**: Automatic data updates every 24 hours to minimize API calls and respect ESB's systems
 - **🔁 Robust Retry Logic**: 5 automatic retry attempts with 2-minute intervals on network failures
 - **⚡ Async Implementation**: Non-blocking async/await design using aiohttp for optimal Home Assistant performance
@@ -74,7 +75,7 @@ Before installing this integration, ensure you have:
    - Open HACS in Home Assistant
    - Click the three dots menu (⋮) in the top right
    - Select "Custom repositories"
-   - Add repository URL: `https://github.com/antoine-voiry/home-assistant-esb-smart-meter-integration`
+   - Add repository URL: `https://github.com/martinenko7/ha_esb_smart_tariff`
    - Category: "Integration"
    - Click "Add"
 
@@ -89,7 +90,7 @@ Before installing this integration, ensure you have:
 For advanced users who prefer manual installation:
 
 1. **Download Latest Release**
-   - Go to [Releases](https://github.com/antoine-voiry/home-assistant-esb-smart-meter-integration/releases)
+   - Go to [Releases](https://github.com/martinenko7/ha_esb_smart_tariff/releases)
    - Download the latest `Source code (zip)` or `Source code (tar.gz)`
 
 2. **Extract Files**
@@ -145,18 +146,27 @@ The integration validates:
 
 ## 📊 Sensors
 
-After successful setup, you'll have **six sensors** created under a single device:
+After successful setup, you'll have **18 tariff usage sensors** created under a single device. Each reporting period includes Day, Night, and Peak usage buckets:
 
-| Sensor Entity ID | Description | Time Period |
-|-----------------|-------------|-------------|
-| `sensor.esb_electricity_usage_today` | Usage since midnight today | 00:00 today → now |
-| `sensor.esb_electricity_usage_last_24_hours` | Rolling 24-hour usage | Last 24 hours |
-| `sensor.esb_electricity_usage_this_week` | Usage since Monday this week | Monday 00:00 → now |
-| `sensor.esb_electricity_usage_last_7_days` | Rolling 7-day usage | Last 7 days |
-| `sensor.esb_electricity_usage_this_month` | Usage since 1st of this month | 1st 00:00 → now |
-| `sensor.esb_electricity_usage_last_30_days` | Rolling 30-day usage | Last 30 days |
+| Time Period | Description |
+|-------------|-------------|
+| Today | Usage since midnight today |
+| Last 24 hours | Rolling 24-hour usage |
+| This week | Usage since Monday this week |
+| Last 7 days | Rolling 7-day usage |
+| This month | Usage since 1st of this month |
+| Last 30 days | Rolling 30-day usage |
 
-**All sensors report in kilowatt-hours (kWh)** with the `⚡` icon.
+For each period, the integration creates three tariff sensors:
+- Day usage
+- Night usage
+- Peak usage
+
+Entity IDs follow the pattern `sensor.<mprn>_<period>_<tariff>` with Day, Night, and Peak buckets per period.
+
+**All usage sensors report in kilowatt-hours (kWh)** with the `⚡` icon.
+
+Additionally, the integration creates diagnostic sensors for last update, API status, data age, and circuit breaker state.
 
 ### Device Information
 
@@ -428,7 +438,7 @@ Contributions are welcome! Here's how you can help:
 
 ### Reporting Issues
 
-1. Check [existing issues](https://github.com/antoine-voiry/home-assistant-esb-smart-meter-integration/issues) first
+1. Check [existing issues](https://github.com/martinenko7/ha_esb_smart_tariff/issues) first
 2. Include Home Assistant version and integration version
 3. Enable debug logging and include relevant log excerpts
 4. Describe expected vs actual behavior
@@ -446,8 +456,8 @@ Contributions are welcome! Here's how you can help:
 
 ```bash
 # Clone repository
-git clone https://github.com/antoine-voiry/home-assistant-esb-smart-meter-integration.git
-cd home-assistant-esb-smart-meter-integration
+git clone https://github.com/martinenko7/ha_esb_smart_tariff.git
+cd ha_esb_smart_tariff
 
 # Install development dependencies
 pip install -r requirements-test.txt

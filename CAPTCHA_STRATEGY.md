@@ -1,5 +1,7 @@
 # CAPTCHA Handling Strategy
 
+**Maintained by:** [martinenko7](https://github.com/martinenko7)
+
 ## Overview
 
 This document describes how the ESB Smart Meter integration handles CAPTCHA protection from ESB Networks and the design decisions behind the implementation.

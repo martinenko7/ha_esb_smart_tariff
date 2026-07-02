@@ -1,12 +1,14 @@
 ## 🔒 Security Policy
 
+**Maintained by:** [martinenko7](https://github.com/martinenko7)
+
 We take the security of the **Home Assistant ESB Smart Meter Integration** and its users seriously. This document outlines the process for reporting security vulnerabilities.
 
 ### Reporting a Vulnerability via GitHub Issues
 
 For prompt reporting and maintenance management, we ask that you use a standard GitHub Issue, following these crucial steps to ensure the vulnerability is handled with care:
 
-1.  **Create a New Issue:** Navigate to the [Issues tab](https://github.com/antoine-voiry/home-assistant-esb-smart-meter-integration/issues) on this repository and click "New issue."
+1.  **Create a New Issue:** Navigate to the [Issues tab](https://github.com/martinenko7/ha_esb_smart_tariff/issues) on this repository and click "New issue."
 2.  **Use the Security Label:** Immediately apply the special label: `**security-vulnerability**` to the issue. This helps maintainers quickly identify the report. You may need to ask a maintainer to apply this label if you cannot.
 3.  **Use an Opaque Title:** Use a descriptive but non-specific title (e.g., "Potential Credential Handling Issue," or "Configuration Validation Flaw"). **Do not** reveal the exploit details in the title.
 4.  **Information to Include (in the Issue Body):**
@@ -28,7 +30,7 @@ We commit to a timely and professional response process:
 
 ### Supported Versions
 
-We only provide security updates for actively maintained versions of this integration. Since this is a custom Home Assistant component, support is generally tied to our latest stable version and the current major stable version of Home Assistant.
+This repository is maintained by [martinenko7](https://github.com/martinenko7). We only provide security updates for actively maintained versions of this integration. Since this is a custom Home Assistant component, support is generally tied to our latest stable version and the current major stable version of Home Assistant.
 
 | Integration Version | Home Assistant Version Support | Status |
 | :--- | :--- | :--- |

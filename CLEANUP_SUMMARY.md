@@ -8,6 +8,8 @@
 
 **Created**: `CAPTCHA_STRATEGY.md`
 
+**Maintained by:** [martinenko7](https://github.com/martinenko7)
+
 A comprehensive documentation file explaining the CAPTCHA handling approach used by the ESB Smart Meter integration. This document covers:
 
 - **Problem Statement**: Why CAPTCHA is triggered by ESB Networks
