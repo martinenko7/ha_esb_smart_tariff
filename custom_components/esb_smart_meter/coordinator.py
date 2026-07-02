@@ -165,33 +165,34 @@ class ESBDataUpdateCoordinator(DataUpdateCoordinator[ESBData]):
         )
 
         # Create notification with improved messaging
-        await self.hass.services.async_call(
-            "persistent_notification",
-            "create",
-            {
-                "notification_id": CAPTCHA_NOTIFICATION_ID,
-                "title": "🔐 ESB Smart Meter: CAPTCHA Required",
-                "message": (
-                    "ESB Networks requires CAPTCHA verification to prevent automated access.\n\n"
-                    "**Steps to resolve:**\n\n"
-                    f"1. Visit [ESB Networks My Account]({ESB_MYACCOUNT_URL})\n"
-                    "2. Complete the CAPTCHA challenge and log in\n"
-                    "3. Leave your browser session active for 5 minutes\n"
-                    "4. The integration will automatically retry\n\n"
-                    "**Alternative:** Wait 24-48 hours for automatic clearance.\n\n"
-                    f"📋 MPRN: `{self.mprn}`\n\n"
-                    "This notification will clear automatically once data retrieval succeeds.\n\n"
-                    "**Need help?** See the [CAPTCHA Setup Guide](https://github.com/your-repo/blob/master/CAPTCHA-SETUP.md) "
-                    "for advanced cookie extraction methods."
-                ),
-            },
-        )
+        # COMMENTED OUT to prevent global UI dashboard notification spam
+        # await self.hass.services.async_call(
+        #     "persistent_notification",
+        #     "create",
+        #     {
+        #         "notification_id": CAPTCHA_NOTIFICATION_ID,
+        #         "title": "🔐 ESB Smart Meter: CAPTCHA Required",
+        #         "message": (
+        #             "ESB Networks requires CAPTCHA verification to prevent automated access.\n\n"
+        #             "**Steps to resolve:**\n\n"
+        #             f"1. Visit [ESB Networks My Account]({ESB_MYACCOUNT_URL})\n"
+        #             "2. Complete the CAPTCHA challenge and log in\n"
+        #             "3. Leave your browser session active for 5 minutes\n"
+        #             "4. The integration will automatically retry\n\n"
+        #             "**Alternative:** Wait 24-48 hours for automatic clearance.\n\n"
+        #             f"📋 MPRN: `{self.mprn}`\n\n"
+        #             "This notification will clear automatically once data retrieval succeeds.\n\n"
+        #             "**Need help?** See the [CAPTCHA Setup Guide](https://github.com/martinenko7/ha_esb_smart_tariff/blob/master/CAPTCHA-SETUP.md) "
+        #             "for advanced cookie extraction methods."
+        #         ),
+        #     },
+        # )
 
-        # Send mobile notification with action button
+        # Send mobile notification with action button directly to your device
         try:
             await self.hass.services.async_call(
                 "notify",
-                "notify",
+                "mobile_app_your_phone_name",
                 {
                     "title": "🔐 ESB Smart Meter: CAPTCHA Required",
                     "message": (
