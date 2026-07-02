@@ -74,6 +74,36 @@ class TestESBData:
         esb_data = ESBData(data=data)
         assert esb_data.last_24_hours == 1.0
 
+    def test_esb_data_tariff_buckets(self):
+        """Test tariff bucket classification for day, night, and peak."""
+        now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+        data = [
+            {
+                "Read Date and End Time": (now + timedelta(hours=0)).strftime("%d-%m-%Y %H:%M"),
+                "Read Value": "1.0",
+            },
+            {
+                "Read Date and End Time": (now + timedelta(hours=8)).strftime("%d-%m-%Y %H:%M"),
+                "Read Value": "2.0",
+            },
+            {
+                "Read Date and End Time": (now + timedelta(hours=17)).strftime("%d-%m-%Y %H:%M"),
+                "Read Value": "3.0",
+            },
+            {
+                "Read Date and End Time": (now + timedelta(hours=23)).strftime("%d-%m-%Y %H:%M"),
+                "Read Value": "4.0",
+            },
+        ]
+
+        esb_data = ESBData(data=data)
+        tariff_totals = esb_data.today_tariff
+
+        assert tariff_totals["night"] == 5.0
+        assert tariff_totals["day"] == 2.0
+        assert tariff_totals["peak"] == 3.0
+
     def test_esb_data_this_week(self):
         """Test this week's data calculation."""
         now = datetime.now()

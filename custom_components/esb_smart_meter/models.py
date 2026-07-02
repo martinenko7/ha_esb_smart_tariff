@@ -4,7 +4,15 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Tuple
 
-from .const import CSV_COLUMN_DATE, CSV_COLUMN_VALUE, CSV_DATE_FORMAT, MAX_DATA_AGE_DAYS
+from .const import (
+    CSV_COLUMN_DATE,
+    CSV_COLUMN_VALUE,
+    CSV_DATE_FORMAT,
+    MAX_DATA_AGE_DAYS,
+    TARIFF_DAY,
+    TARIFF_NIGHT,
+    TARIFF_PEAK,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,6 +65,24 @@ class ESBData:
                 continue
         return parsed_data
 
+    @staticmethod
+    def _get_tariff_type(timestamp: datetime) -> str:
+        """Return the tariff bucket for the given timestamp."""
+        hour = timestamp.hour
+        if 23 <= hour or hour < 8:
+            return TARIFF_NIGHT
+        if 17 <= hour < 19:
+            return TARIFF_PEAK
+        return TARIFF_DAY
+
+    def _sum_data_by_tariff(self, *, since: datetime) -> dict[str, float]:
+        """Sum energy usage by tariff bucket since a specific datetime."""
+        totals = {TARIFF_DAY: 0.0, TARIFF_NIGHT: 0.0, TARIFF_PEAK: 0.0}
+        for timestamp, value in self._data:
+            if timestamp >= since:
+                totals[self._get_tariff_type(timestamp)] += value
+        return totals
+
     def __sum_data_since(self, *, since: datetime) -> float:
         """Sum energy usage since a specific datetime (optimized)."""
         return sum(value for timestamp, value in self._data if timestamp >= since)
@@ -67,9 +93,19 @@ class ESBData:
         return self.__sum_data_since(since=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0))
 
     @property
+    def today_tariff(self) -> dict[str, float]:
+        """Get today's usage split by tariff bucket."""
+        return self._sum_data_by_tariff(since=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0))
+
+    @property
     def last_24_hours(self) -> float:
         """Get last 24 hours usage."""
         return self.__sum_data_since(since=datetime.now() - timedelta(days=1))
+
+    @property
+    def last_24_hours_tariff(self) -> dict[str, float]:
+        """Get last 24 hours usage split by tariff bucket."""
+        return self._sum_data_by_tariff(since=datetime.now() - timedelta(days=1))
 
     @property
     def this_week(self) -> float:
@@ -80,9 +116,22 @@ class ESBData:
         )
 
     @property
+    def this_week_tariff(self) -> dict[str, float]:
+        """Get this week's usage split by tariff bucket."""
+        return self._sum_data_by_tariff(
+            since=datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            - timedelta(days=datetime.now().weekday())
+        )
+
+    @property
     def last_7_days(self) -> float:
         """Get last 7 days usage."""
         return self.__sum_data_since(since=datetime.now() - timedelta(days=7))
+
+    @property
+    def last_7_days_tariff(self) -> dict[str, float]:
+        """Get last 7 days usage split by tariff bucket."""
+        return self._sum_data_by_tariff(since=datetime.now() - timedelta(days=7))
 
     @property
     def this_month(self) -> float:
@@ -90,6 +139,16 @@ class ESBData:
         return self.__sum_data_since(since=datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0))
 
     @property
+    def this_month_tariff(self) -> dict[str, float]:
+        """Get this month's usage split by tariff bucket."""
+        return self._sum_data_by_tariff(since=datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0))
+
+    @property
     def last_30_days(self) -> float:
         """Get last 30 days usage."""
         return self.__sum_data_since(since=datetime.now() - timedelta(days=30))
+
+    @property
+    def last_30_days_tariff(self) -> dict[str, float]:
+        """Get last 30 days usage split by tariff bucket."""
+        return self._sum_data_by_tariff(since=datetime.now() - timedelta(days=30))

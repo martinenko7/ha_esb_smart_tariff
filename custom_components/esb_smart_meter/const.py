@@ -18,6 +18,11 @@ DEFAULT_RETRY_WAIT = 1800  # Wait 30 minutes (1800 seconds) between retries
 MAX_CSV_SIZE_MB = 10  # Maximum CSV response size in MB
 MAX_DATA_AGE_DAYS = 90  # Maximum age of data to keep in memory
 
+# Time-of-use tariff buckets
+TARIFF_DAY = "day"
+TARIFF_NIGHT = "night"
+TARIFF_PEAK = "peak"
+
 # Stealth and timing constants
 STARTUP_DELAY_MIN = 300  # Minimum delay after HA boot (5 minutes)
 STARTUP_DELAY_MAX = 600  # Maximum delay after HA boot (10 minutes)

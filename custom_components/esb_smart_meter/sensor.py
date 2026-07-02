@@ -12,11 +12,26 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, MODEL
+from .const import DOMAIN, MANUFACTURER, MODEL, TARIFF_DAY, TARIFF_NIGHT, TARIFF_PEAK
 from .coordinator import ESBDataUpdateCoordinator
 from .models import ESBData
 
 _LOGGER = logging.getLogger(__name__)
+
+PERIODS = [
+    ("today", "Today"),
+    ("last_24_hours", "Last 24 Hours"),
+    ("this_week", "This Week"),
+    ("last_7_days", "Last 7 Days"),
+    ("this_month", "This Month"),
+    ("last_30_days", "Last 30 Days"),
+]
+
+TARIFFS = [
+    (TARIFF_DAY, "Day"),
+    (TARIFF_NIGHT, "Night"),
+    (TARIFF_PEAK, "Peak"),
+]
 
 
 async def async_setup_entry(
@@ -25,26 +40,30 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ESB Smart Meter sensor based on a config entry."""
-    # Get coordinator from hass.data
     coordinator: ESBDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
     mprn = coordinator.mprn
 
-    # Create all sensors using the coordinator
-    sensors = [
-        TodaySensor(coordinator=coordinator, mprn=mprn),
-        Last24HoursSensor(coordinator=coordinator, mprn=mprn),
-        ThisWeekSensor(coordinator=coordinator, mprn=mprn),
-        Last7DaysSensor(coordinator=coordinator, mprn=mprn),
-        ThisMonthSensor(coordinator=coordinator, mprn=mprn),
-        Last30DaysSensor(coordinator=coordinator, mprn=mprn),
-        # Diagnostic sensors
+    sensors = []
+    for period_key, period_label in PERIODS:
+        for tariff_key, tariff_label in TARIFFS:
+            sensors.append(
+                TariffUsageSensor(
+                    coordinator=coordinator,
+                    mprn=mprn,
+                    period_key=period_key,
+                    period_label=period_label,
+                    tariff_key=tariff_key,
+                    tariff_label=tariff_label,
+                )
+            )
+
+    sensors.extend([
         LastUpdateSensor(coordinator=coordinator, mprn=mprn),
         ApiStatusSensor(coordinator=coordinator, mprn=mprn),
         DataAgeSensor(coordinator=coordinator, mprn=mprn),
         CircuitBreakerStatusSensor(coordinator=coordinator, mprn=mprn),
-    ]
+    ])
 
-    # Add entities - coordinator handles updates
     async_add_entities(sensors)
 
 
@@ -64,11 +83,13 @@ class BaseSensor(CoordinatorEntity[ESBDataUpdateCoordinator], SensorEntity):
         coordinator: ESBDataUpdateCoordinator,
         mprn: str,
         name: str,
+        unique_id: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._mprn = mprn
         self._attr_name = name
+        self._attr_unique_id = unique_id
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -92,106 +113,38 @@ class BaseSensor(CoordinatorEntity[ESBDataUpdateCoordinator], SensorEntity):
         return self._get_data(esb_data=self.coordinator.data)
 
 
-class TodaySensor(BaseSensor):
-    """Sensor for today's electricity usage."""
+class TariffUsageSensor(BaseSensor):
+    """Sensor for tariff-specific electricity usage."""
 
-    def __init__(self, *, coordinator: ESBDataUpdateCoordinator, mprn: str) -> None:
-        """Initialize the sensor."""
+    def __init__(
+        self,
+        *,
+        coordinator: ESBDataUpdateCoordinator,
+        mprn: str,
+        period_key: str,
+        period_label: str,
+        tariff_key: str,
+        tariff_label: str,
+    ) -> None:
+        """Initialize the tariff sensor."""
+        name = f"ESB Electricity Usage: {period_label} {tariff_label}"
+        unique_id = f"{mprn}_{period_key}_{tariff_key}"
         super().__init__(
             coordinator=coordinator,
             mprn=mprn,
-            name="ESB Electricity Usage: Today",
+            name=name,
+            unique_id=unique_id,
         )
-        self._attr_unique_id = f"{mprn}_today"
+        self._period_key = period_key
+        self._tariff_key = tariff_key
 
     def _get_data(self, *, esb_data: ESBData) -> float:
-        """Get today's data."""
-        return esb_data.today
-
-
-class Last24HoursSensor(BaseSensor):
-    """Sensor for last 24 hours electricity usage."""
-
-    def __init__(self, *, coordinator: ESBDataUpdateCoordinator, mprn: str) -> None:
-        """Initialize the sensor."""
-        super().__init__(
-            coordinator=coordinator,
-            mprn=mprn,
-            name="ESB Electricity Usage: Last 24 Hours",
-        )
-        self._attr_unique_id = f"{mprn}_last_24_hours"
-
-    def _get_data(self, *, esb_data: ESBData) -> float:
-        """Get last 24 hours data."""
-        return esb_data.last_24_hours
-
-
-class ThisWeekSensor(BaseSensor):
-    """Sensor for this week's electricity usage."""
-
-    def __init__(self, *, coordinator: ESBDataUpdateCoordinator, mprn: str) -> None:
-        """Initialize the sensor."""
-        super().__init__(
-            coordinator=coordinator,
-            mprn=mprn,
-            name="ESB Electricity Usage: This Week",
-        )
-        self._attr_unique_id = f"{mprn}_this_week"
-
-    def _get_data(self, *, esb_data: ESBData) -> float:
-        """Get this week's data."""
-        return esb_data.this_week
-
-
-class Last7DaysSensor(BaseSensor):
-    """Sensor for last 7 days electricity usage."""
-
-    def __init__(self, *, coordinator: ESBDataUpdateCoordinator, mprn: str) -> None:
-        """Initialize the sensor."""
-        super().__init__(
-            coordinator=coordinator,
-            mprn=mprn,
-            name="ESB Electricity Usage: Last 7 Days",
-        )
-        self._attr_unique_id = f"{mprn}_last_7_days"
-
-    def _get_data(self, *, esb_data: ESBData) -> float:
-        """Get last 7 days data."""
-        return esb_data.last_7_days
-
-
-class ThisMonthSensor(BaseSensor):
-    """Sensor for this month's electricity usage."""
-
-    def __init__(self, *, coordinator: ESBDataUpdateCoordinator, mprn: str) -> None:
-        """Initialize the sensor."""
-        super().__init__(
-            coordinator=coordinator,
-            mprn=mprn,
-            name="ESB Electricity Usage: This Month",
-        )
-        self._attr_unique_id = f"{mprn}_this_month"
-
-    def _get_data(self, *, esb_data: ESBData) -> float:
-        """Get this month's data."""
-        return esb_data.this_month
-
-
-class Last30DaysSensor(BaseSensor):
-    """Sensor for last 30 days electricity usage."""
-
-    def __init__(self, *, coordinator: ESBDataUpdateCoordinator, mprn: str) -> None:
-        """Initialize the sensor."""
-        super().__init__(
-            coordinator=coordinator,
-            mprn=mprn,
-            name="ESB Electricity Usage: Last 30 Days",
-        )
-        self._attr_unique_id = f"{mprn}_last_30_days"
-
-    def _get_data(self, *, esb_data: ESBData) -> float:
-        """Get last 30 days data."""
-        return esb_data.last_30_days
+        """Get the requested tariff usage from coordinator data."""
+        period_attr = f"{self._period_key}_tariff"
+        period_data = getattr(esb_data, period_attr, None)
+        if period_data is None:
+            return 0.0
+        return float(period_data.get(self._tariff_key, 0.0))
 
 
 class LastUpdateSensor(SensorEntity):

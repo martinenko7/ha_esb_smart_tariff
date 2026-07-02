@@ -12,14 +12,10 @@ from custom_components.esb_smart_meter.const import DOMAIN
 from custom_components.esb_smart_meter.models import ESBData
 from custom_components.esb_smart_meter.sensor import (
     ApiStatusSensor,
+    CircuitBreakerStatusSensor,
     DataAgeSensor,
-    Last7DaysSensor,
-    Last24HoursSensor,
-    Last30DaysSensor,
     LastUpdateSensor,
-    ThisMonthSensor,
-    ThisWeekSensor,
-    TodaySensor,
+    TariffUsageSensor,
     async_setup_entry,
 )
 from tests.conftest import _async_create_task_handler
@@ -75,29 +71,23 @@ class TestAsyncSetupEntry:
 
     @pytest.mark.asyncio
     async def test_setup_entry_creates_all_sensors(self, mock_hass, mock_config_entry):
-        """Test that setup_entry creates all 10 sensors (including circuit breaker)."""
+        """Test that setup_entry creates all tariff sensors and diagnostic sensors."""
         async_add_entities = MagicMock()
 
         await async_setup_entry(mock_hass, mock_config_entry, async_add_entities)
 
-        # Verify 10 sensors were created (6 data + 4 diagnostic sensors)
+        # Verify 22 sensors were created (18 tariff sensors + 4 diagnostic sensors).
         assert async_add_entities.called
         sensors = async_add_entities.call_args[0][0]
-        assert len(sensors) == 10
+        assert len(sensors) == 22
 
-        # Verify sensor types
-        assert isinstance(sensors[0], TodaySensor)
-        assert isinstance(sensors[1], Last24HoursSensor)
-        assert isinstance(sensors[2], ThisWeekSensor)
-        assert isinstance(sensors[3], Last7DaysSensor)
-        assert isinstance(sensors[4], ThisMonthSensor)
-        assert isinstance(sensors[5], Last30DaysSensor)
-        # Diagnostic sensors
-        assert isinstance(sensors[6], LastUpdateSensor)
-        assert isinstance(sensors[7], ApiStatusSensor)
-        assert isinstance(sensors[8], DataAgeSensor)
-        assert isinstance(sensors[4], ThisMonthSensor)
-        assert isinstance(sensors[5], Last30DaysSensor)
+        # Verify tariff sensors and diagnostics
+        assert isinstance(sensors[0], TariffUsageSensor)
+        assert isinstance(sensors[17], TariffUsageSensor)
+        assert isinstance(sensors[18], LastUpdateSensor)
+        assert isinstance(sensors[19], ApiStatusSensor)
+        assert isinstance(sensors[20], DataAgeSensor)
+        assert isinstance(sensors[21], CircuitBreakerStatusSensor)
 
 
 class TestBaseSensor:
@@ -121,18 +111,32 @@ class TestBaseSensor:
 
     def test_sensor_reads_from_coordinator(self, mock_coordinator):
         """Test sensor reads data from coordinator."""
-        sensor = TodaySensor(coordinator=mock_coordinator, mprn="12345678901")
+        sensor = TariffUsageSensor(
+            coordinator=mock_coordinator,
+            mprn="12345678901",
+            period_key="today",
+            period_label="Today",
+            tariff_key="night",
+            tariff_label="Night",
+        )
 
         value = sensor.native_value
 
-        assert value == mock_coordinator.data.today
+        assert value == mock_coordinator.data.today_tariff["night"]
 
     def test_sensor_handles_no_data(self):
         """Test sensor handles when coordinator has no data."""
         coordinator = MagicMock(spec=DataUpdateCoordinator)
         coordinator.data = None
 
-        sensor = TodaySensor(coordinator=coordinator, mprn="12345678901")
+        sensor = TariffUsageSensor(
+            coordinator=coordinator,
+            mprn="12345678901",
+            period_key="today",
+            period_label="Today",
+            tariff_key="night",
+            tariff_label="Night",
+        )
 
         value = sensor.native_value
 
@@ -140,7 +144,14 @@ class TestBaseSensor:
 
     def test_sensor_device_info(self, mock_coordinator):
         """Test sensor device info."""
-        sensor = TodaySensor(coordinator=mock_coordinator, mprn="12345678901")
+        sensor = TariffUsageSensor(
+            coordinator=mock_coordinator,
+            mprn="12345678901",
+            period_key="today",
+            period_label="Today",
+            tariff_key="night",
+            tariff_label="Night",
+        )
 
         device_info = sensor.device_info
 
@@ -150,19 +161,33 @@ class TestBaseSensor:
 
     def test_sensor_unit_of_measurement(self, mock_coordinator):
         """Test sensor has correct unit of measurement."""
-        sensor = TodaySensor(coordinator=mock_coordinator, mprn="12345678901")
+        sensor = TariffUsageSensor(
+            coordinator=mock_coordinator,
+            mprn="12345678901",
+            period_key="today",
+            period_label="Today",
+            tariff_key="night",
+            tariff_label="Night",
+        )
 
         assert sensor._attr_native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR
 
     def test_sensor_icon(self, mock_coordinator):
         """Test sensor has correct icon."""
-        sensor = TodaySensor(coordinator=mock_coordinator, mprn="12345678901")
+        sensor = TariffUsageSensor(
+            coordinator=mock_coordinator,
+            mprn="12345678901",
+            period_key="today",
+            period_label="Today",
+            tariff_key="night",
+            tariff_label="Night",
+        )
 
         assert sensor._attr_icon == "mdi:flash"
 
 
-class TestTodaySensor:
-    """Test TodaySensor class."""
+class TestTariffUsageSensor:
+    """Test tariff usage sensors."""
 
     @pytest.fixture
     def mock_coordinator(self):
@@ -170,145 +195,57 @@ class TestTodaySensor:
         return MagicMock(spec=DataUpdateCoordinator)
 
     def test_unique_id(self, mock_coordinator):
-        """Test Today sensor unique ID."""
-        sensor = TodaySensor(coordinator=mock_coordinator, mprn="12345678901")
+        """Test tariff sensor unique ID."""
+        sensor = TariffUsageSensor(
+            coordinator=mock_coordinator,
+            mprn="12345678901",
+            period_key="today",
+            period_label="Today",
+            tariff_key="night",
+            tariff_label="Night",
+        )
 
-        assert sensor._attr_unique_id == "12345678901_today"
-
-    def test_get_data(self, mock_coordinator):
-        """Test Today sensor gets correct data."""
-        sensor = TodaySensor(coordinator=mock_coordinator, mprn="12345678901")
-
-        esb_data = MagicMock()
-        esb_data.today = 15.5
-
-        result = sensor._get_data(esb_data=esb_data)
-        assert result == 15.5
-
-
-class TestLast24HoursSensor:
-    """Test Last24HoursSensor class."""
-
-    @pytest.fixture
-    def mock_coordinator(self):
-        """Create mock coordinator."""
-        return MagicMock(spec=DataUpdateCoordinator)
-
-    def test_unique_id(self, mock_coordinator):
-        """Test Last 24 Hours sensor unique ID."""
-        sensor = Last24HoursSensor(coordinator=mock_coordinator, mprn="12345678901")
-
-        assert sensor._attr_unique_id == "12345678901_last_24_hours"
+        assert sensor._attr_unique_id == "12345678901_today_night"
 
     def test_get_data(self, mock_coordinator):
-        """Test Last 24 Hours sensor gets correct data."""
-        sensor = Last24HoursSensor(coordinator=mock_coordinator, mprn="12345678901")
+        """Test tariff sensor gets correct data from ESBData."""
+        sensor = TariffUsageSensor(
+            coordinator=mock_coordinator,
+            mprn="12345678901",
+            period_key="today",
+            period_label="Today",
+            tariff_key="night",
+            tariff_label="Night",
+        )
 
         esb_data = MagicMock()
-        esb_data.last_24_hours = 25.3
+        esb_data.today_tariff = {"day": 0.0, "night": 1.5, "peak": 0.0}
 
         result = sensor._get_data(esb_data=esb_data)
-        assert result == 25.3
+        assert result == 1.5
 
+    def test_native_value_uses_coordinator_data(self, mock_coordinator):
+        """Test tariff sensor native_value returns coordinator data."""
+        esb_data = ESBData(
+            data=[
+                {
+                    "Read Date and End Time": "31-12-2024 00:30",
+                    "Read Value": "1.5",
+                }
+            ]
+        )
+        mock_coordinator.data = esb_data
 
-class TestThisWeekSensor:
-    """Test ThisWeekSensor class."""
+        sensor = TariffUsageSensor(
+            coordinator=mock_coordinator,
+            mprn="12345678901",
+            period_key="today",
+            period_label="Today",
+            tariff_key="night",
+            tariff_label="Night",
+        )
 
-    @pytest.fixture
-    def mock_coordinator(self):
-        """Create mock coordinator."""
-        return MagicMock(spec=DataUpdateCoordinator)
-
-    def test_unique_id(self, mock_coordinator):
-        """Test This Week sensor unique ID."""
-        sensor = ThisWeekSensor(coordinator=mock_coordinator, mprn="12345678901")
-
-        assert sensor._attr_unique_id == "12345678901_this_week"
-
-    def test_get_data(self, mock_coordinator):
-        """Test This Week sensor gets correct data."""
-        sensor = ThisWeekSensor(coordinator=mock_coordinator, mprn="12345678901")
-
-        esb_data = MagicMock()
-        esb_data.this_week = 85.7
-
-        result = sensor._get_data(esb_data=esb_data)
-        assert result == 85.7
-
-
-class TestLast7DaysSensor:
-    """Test Last7DaysSensor class."""
-
-    @pytest.fixture
-    def mock_coordinator(self):
-        """Create mock coordinator."""
-        return MagicMock(spec=DataUpdateCoordinator)
-
-    def test_unique_id(self, mock_coordinator):
-        """Test Last 7 Days sensor unique ID."""
-        sensor = Last7DaysSensor(coordinator=mock_coordinator, mprn="12345678901")
-
-        assert sensor._attr_unique_id == "12345678901_last_7_days"
-
-    def test_get_data(self, mock_coordinator):
-        """Test Last 7 Days sensor gets correct data."""
-        sensor = Last7DaysSensor(coordinator=mock_coordinator, mprn="12345678901")
-
-        esb_data = MagicMock()
-        esb_data.last_7_days = 175.2
-
-        result = sensor._get_data(esb_data=esb_data)
-        assert result == 175.2
-
-
-class TestThisMonthSensor:
-    """Test ThisMonthSensor class."""
-
-    @pytest.fixture
-    def mock_coordinator(self):
-        """Create mock coordinator."""
-        return MagicMock(spec=DataUpdateCoordinator)
-
-    def test_unique_id(self, mock_coordinator):
-        """Test This Month sensor unique ID."""
-        sensor = ThisMonthSensor(coordinator=mock_coordinator, mprn="12345678901")
-
-        assert sensor._attr_unique_id == "12345678901_this_month"
-
-    def test_get_data(self, mock_coordinator):
-        """Test This Month sensor gets correct data."""
-        sensor = ThisMonthSensor(coordinator=mock_coordinator, mprn="12345678901")
-
-        esb_data = MagicMock()
-        esb_data.this_month = 450.8
-
-        result = sensor._get_data(esb_data=esb_data)
-        assert result == 450.8
-
-
-class TestLast30DaysSensor:
-    """Test Last30DaysSensor class."""
-
-    @pytest.fixture
-    def mock_coordinator(self):
-        """Create mock coordinator."""
-        return MagicMock(spec=DataUpdateCoordinator)
-
-    def test_unique_id(self, mock_coordinator):
-        """Test Last 30 Days sensor unique ID."""
-        sensor = Last30DaysSensor(coordinator=mock_coordinator, mprn="12345678901")
-
-        assert sensor._attr_unique_id == "12345678901_last_30_days"
-
-    def test_get_data(self, mock_coordinator):
-        """Test Last 30 Days sensor gets correct data."""
-        sensor = Last30DaysSensor(coordinator=mock_coordinator, mprn="12345678901")
-
-        esb_data = MagicMock()
-        esb_data.last_30_days = 520.6
-
-        result = sensor._get_data(esb_data=esb_data)
-        assert result == 520.6
+        assert sensor.native_value == 1.5
 
 
 class TestLastUpdateSensor:
