@@ -182,11 +182,16 @@ class LastUpdateSensor(SensorEntity):
         self.async_write_ha_state()
 
     @property
-    def native_value(self) -> str | None:
-        """Return the timestamp of the last successful update."""
+    def native_value(self) -> datetime | None:
+        """Return the timestamp of the last successful update as a datetime.
+
+        Home Assistant expects a datetime object for sensors with
+        device_class=timestamp so return the actual datetime rather than an
+        ISO-formatted string.
+        """
         if self.coordinator.last_successful_update_time is None:
             return None
-        return self.coordinator.last_successful_update_time.isoformat()
+        return self.coordinator.last_successful_update_time
 
 
 class ApiStatusSensor(SensorEntity):

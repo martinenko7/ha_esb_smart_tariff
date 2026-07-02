@@ -276,8 +276,8 @@ class TestLastUpdateSensor:
         test_time = datetime(2024, 12, 31, 12, 30, 0, tzinfo=timezone.utc)
         mock_coordinator.last_successful_update_time = test_time
         sensor = LastUpdateSensor(coordinator=mock_coordinator, mprn="12345678901")
-
-        assert sensor.native_value == test_time.isoformat()
+        # Native value should be a datetime object (not iso string)
+        assert sensor.native_value == test_time
 
 
 class TestApiStatusSensor:
