@@ -1,12 +1,15 @@
 {
-  "domain": "esb_smart_meter",
-  "name": "ESB Smart Meter",
+  "domain": "ha_esb_smart_tariff",
+  "name": "ESB Smart Tariff (ToU)",
   "codeowners": ["@martinenko7"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/martinenko7/ha_esb_smart_tariff",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/martinenko7/ha_esb_smart_tariff/issues",
-  "requirements": ["beautifulsoup4>=4.12.0"],
+  "requirements": [
+    "beautifulsoup4>=4.12.0",
+    "homeassistant-historical-sensor==2.0.0rc4"
+  ],
   "version": "1.3.5"
 }

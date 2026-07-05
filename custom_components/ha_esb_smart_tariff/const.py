@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-DOMAIN = "esb_smart_meter"
+DOMAIN = "ha_esb_smart_tariff"
 
 # Configuration keys
 CONF_USERNAME = "username"

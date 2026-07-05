@@ -95,11 +95,7 @@ class ESBDataUpdateCoordinator(DataUpdateCoordinator[ESBData]):
                 # Dismiss the notification
                 await self._dismiss_captcha_notification()
 
-            _LOGGER.debug(
-                "Successfully fetched ESB data: today=%.2f kWh, last_30_days=%.2f kWh",
-                esb_data.today,
-                esb_data.last_30_days,
-            )
+            _LOGGER.debug("Successfully fetched ESB data with %d intervals", len(esb_data.intervals))
 
             # Update the last successful update time
             self.last_successful_update_time = datetime.now(timezone.utc)
@@ -171,7 +167,7 @@ class ESBDataUpdateCoordinator(DataUpdateCoordinator[ESBData]):
         #     "create",
         #     {
         #         "notification_id": CAPTCHA_NOTIFICATION_ID,
-        #         "title": "🔐 ESB Smart Meter: CAPTCHA Required",
+        #         "title": "馃攼 ESB Smart Meter: CAPTCHA Required",
         #         "message": (
         #             "ESB Networks requires CAPTCHA verification to prevent automated access.\n\n"
         #             "**Steps to resolve:**\n\n"
@@ -180,7 +176,7 @@ class ESBDataUpdateCoordinator(DataUpdateCoordinator[ESBData]):
         #             "3. Leave your browser session active for 5 minutes\n"
         #             "4. The integration will automatically retry\n\n"
         #             "**Alternative:** Wait 24-48 hours for automatic clearance.\n\n"
-        #             f"📋 MPRN: `{self.mprn}`\n\n"
+        #             f"馃搵 MPRN: `{self.mprn}`\n\n"
         #             "This notification will clear automatically once data retrieval succeeds.\n\n"
         #             "**Need help?** See the [CAPTCHA Setup Guide](https://github.com/martinenko7/ha_esb_smart_tariff/blob/master/CAPTCHA-SETUP.md) "
         #             "for advanced cookie extraction methods."
@@ -194,7 +190,7 @@ class ESBDataUpdateCoordinator(DataUpdateCoordinator[ESBData]):
                 "notify",
                 "mobile_app_your_phone_name",
                 {
-                    "title": "🔐 ESB Smart Meter: CAPTCHA Required",
+                    "title": "馃攼 ESB Smart Meter: CAPTCHA Required",
                     "message": (
                         f"MPRN {self.mprn}: CAPTCHA verification needed. "
                         "Tap to open ESB website and complete verification."
