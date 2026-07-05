@@ -81,3 +81,8 @@ CSV_DATE_FORMAT = "%d-%m-%Y %H:%M"
 # Device information
 MANUFACTURER = "ESB Networks"
 MODEL = "Smart Meter"
+
+# Tariff Types
+TARIFF_DAY = "day"
+TARIFF_NIGHT = "night"
+TARIFF_PEAK = "peak"
